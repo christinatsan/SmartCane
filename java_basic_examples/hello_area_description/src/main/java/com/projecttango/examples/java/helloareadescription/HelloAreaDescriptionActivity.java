@@ -16,6 +16,16 @@
 
 package com.projecttango.examples.java.helloareadescription;
 
+import android.app.Activity;
+import android.app.FragmentManager;
+import android.content.Intent;
+import android.os.Bundle;
+import android.util.Log;
+import android.view.View;
+import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
+
 import com.google.atap.tangoservice.Tango;
 import com.google.atap.tangoservice.Tango.OnTangoUpdateListener;
 import com.google.atap.tangoservice.TangoAreaDescriptionMetaData;
@@ -28,16 +38,6 @@ import com.google.atap.tangoservice.TangoOutOfDateException;
 import com.google.atap.tangoservice.TangoPointCloudData;
 import com.google.atap.tangoservice.TangoPoseData;
 import com.google.atap.tangoservice.TangoXyzIjData;
-
-import android.app.Activity;
-import android.app.FragmentManager;
-import android.content.Intent;
-import android.os.Bundle;
-import android.util.Log;
-import android.view.View;
-import android.widget.Button;
-import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -60,6 +60,12 @@ public class HelloAreaDescriptionActivity extends Activity implements
     private TextView mReachedDestinationTextView;
 
     private Button mSaveAdfButton;
+    private Button mSaveLandButton;
+
+    private boolean mSaveLand;
+
+    private float[] arrayLands;
+    private int countLands = 0;
 
     private double mPreviousPoseTimeStamp;
     private double mTimeToNextUpdate = UPDATE_INTERVAL_MS;
@@ -85,6 +91,8 @@ public class HelloAreaDescriptionActivity extends Activity implements
         Intent intent = getIntent();
         mIsLearningMode = intent.getBooleanExtra(StartActivity.USE_AREA_LEARNING, false);
         mIsConstantSpaceRelocalize = intent.getBooleanExtra(StartActivity.LOAD_ADF, false);
+
+        arrayLands = new float[20];
     }
 
     @Override
@@ -162,6 +170,14 @@ public class HelloAreaDescriptionActivity extends Activity implements
         mDestinationTextView = (TextView) findViewById(R.id.destination_textview);
         mCurrentLocationTextView = (TextView) findViewById(R.id.current_location_textview);
         mReachedDestinationTextView = (TextView) findViewById(R.id.reached_destination_textview);
+        mSaveLandButton = (Button) findViewById(R.id.land_button);
+
+        mSaveLandButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                saveLandmark();
+            }
+        });
 
         StringBuilder stringBuilder= new StringBuilder();
         stringBuilder.append("X:" + mDestinationTranslation[0] + ", Y:" + mDestinationTranslation[1] + ", Z:" + mDestinationTranslation[2]);
@@ -256,6 +272,12 @@ public class HelloAreaDescriptionActivity extends Activity implements
                     }
                 }
 
+                float coords[] = pose.getTranslationAsFloats();
+                arrayLands[countLands] = coords[0];
+                arrayLands[countLands+1] = coords[1];
+                arrayLands[countLands+2] = coords[2];
+                countLands++;
+
                 final double deltaTime = (pose.timestamp - mPreviousPoseTimeStamp) *
                         SECS_TO_MILLISECS;
                 mPreviousPoseTimeStamp = pose.timestamp;
@@ -313,6 +335,10 @@ public class HelloAreaDescriptionActivity extends Activity implements
                 // We are not using onFrameAvailable for this application.
             }
         });
+    }
+
+    public void saveLandmark(){
+        mSaveLand = true;
     }
 
     /**
