@@ -273,10 +273,10 @@ public class HelloAreaDescriptionActivity extends Activity implements
                 }
 
                 float coords[] = pose.getTranslationAsFloats();
-                arrayLands[countLands] = coords[0];
-                arrayLands[countLands+1] = coords[1];
-                arrayLands[countLands+2] = coords[2];
-                countLands++;
+                //arrayLands[countLands] = coords[0];
+               // arrayLands[countLands+1] = coords[1];
+               // arrayLands[countLands+2] = coords[2];
+               // countLands++;
 
                 final double deltaTime = (pose.timestamp - mPreviousPoseTimeStamp) *
                         SECS_TO_MILLISECS;
