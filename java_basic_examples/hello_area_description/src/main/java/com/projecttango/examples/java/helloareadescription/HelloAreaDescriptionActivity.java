@@ -18,6 +18,7 @@ package com.projecttango.examples.java.helloareadescription;
 
 import android.app.Activity;
 import android.app.FragmentManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -63,6 +64,8 @@ public class HelloAreaDescriptionActivity extends Activity implements
     private Button mSaveLandButton;
 
     private boolean mSaveLand;
+    private ArrayList<TangoPoseData> landmarkList = new ArrayList();
+    private ArrayList<String> landmarkName = new ArrayList();
 
     private float[] arrayLands;
     private int countLands = 0;
@@ -92,7 +95,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
         mIsLearningMode = intent.getBooleanExtra(StartActivity.USE_AREA_LEARNING, false);
         mIsConstantSpaceRelocalize = intent.getBooleanExtra(StartActivity.LOAD_ADF, false);
 
-        arrayLands = new float[20];
+       // arrayLands = new float[20];
     }
 
     @Override
@@ -175,7 +178,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
         mSaveLandButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                saveLandmark();
+                mSaveLand = true;
             }
         });
 
@@ -254,7 +257,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
         mTango.connectListener(framePairs, new OnTangoUpdateListener() {
 
             @Override
-            public void onPoseAvailable(TangoPoseData pose) {
+            public void onPoseAvailable(final TangoPoseData pose) {
                 // Make sure to have atomic access to Tango Data so that UI loop doesn't interfere
                 // while Pose call back is updating the data.
                 synchronized (mSharedLock) {
@@ -272,7 +275,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
                     }
                 }
 
-                float coords[] = pose.getTranslationAsFloats();
+               // float coords[] = pose.getTranslationAsFloats();
                 //arrayLands[countLands] = coords[0];
                // arrayLands[countLands+1] = coords[1];
                // arrayLands[countLands+2] = coords[2];
@@ -308,6 +311,18 @@ public class HelloAreaDescriptionActivity extends Activity implements
                                     mReachedDestinationTextView.setText(String.valueOf(((int) translation[0] == (int) mDestinationTranslation[0]) &&
                                             ((int) translation[1] == (int) mDestinationTranslation[1]) &&
                                             ((int) translation[2] == (int) mDestinationTranslation[2])));
+
+                                    if(mSaveLand == true){
+                                        landmarkList.add(pose);
+                                        mSaveLand = false;
+
+                                        Context context = getApplicationContext();
+                                        CharSequence text = "Landmark saved";
+                                        int duration = Toast.LENGTH_SHORT;
+
+                                        Toast toast = Toast.makeText(context, text, duration);
+                                        toast.show();
+                                    }
                                 }
                             }
                         }
@@ -335,10 +350,6 @@ public class HelloAreaDescriptionActivity extends Activity implements
                 // We are not using onFrameAvailable for this application.
             }
         });
-    }
-
-    public void saveLandmark(){
-        mSaveLand = true;
     }
 
     /**
