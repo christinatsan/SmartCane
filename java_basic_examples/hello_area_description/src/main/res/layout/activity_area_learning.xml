@@ -114,32 +114,31 @@
                 android:layout_height="wrap_content"
                 android:id="@+id/reached_destination_textview"
                 android:text="false" />
+
         </LinearLayout>
 
+        <Button
+            android:id="@+id/save_adf_button"
+            style="?android:attr/buttonStyleSmall"
+            android:layout_width="100dp"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentLeft="true"
+            android:text="@string/save_adf"
+            android:onClick="saveAdfClicked"/>
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save Landmark"
+            android:id="@+id/land_button"/>
+
+        <EditText
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:id="@+id/landmarkName"/>
+
     </LinearLayout>
-
-    <Button
-        android:id="@+id/save_adf_button"
-        style="?android:attr/buttonStyleSmall"
-        android:layout_width="100dp"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_alignParentLeft="true"
-        android:text="@string/save_adf"
-        android:onClick="saveAdfClicked"/>
-
-    <Button
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Save Landmark"
-        android:id="@+id/land_button"/>
-
-    <EditText
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:id="@+id/landmarkName"/>
-
-
 
 
 </LinearLayout>

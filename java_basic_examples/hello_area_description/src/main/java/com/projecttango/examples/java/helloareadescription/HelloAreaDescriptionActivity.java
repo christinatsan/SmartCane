@@ -195,6 +195,13 @@ public class HelloAreaDescriptionActivity extends Activity implements
             public void onClick(View view) {
 
                 landmarkList.add(currentPose);
+                Log.i("landmarkList.len =  ", String.valueOf(landmarkList.size()));
+
+                for (TangoPoseData t : landmarkList) {
+                    Log.i("t = ", t.toString());
+                }
+
+              //  Log.d("Size of landmarks")
 
                 Context context = getApplicationContext();
                 CharSequence text = "Landmark saved";
@@ -208,29 +215,31 @@ public class HelloAreaDescriptionActivity extends Activity implements
             }
         });
 
-        StringBuilder stringBuilder= new StringBuilder();
+        StringBuilder stringBuilder = new StringBuilder();
         stringBuilder.append("X:" + mDestinationTranslation[0] + ", Y:" + mDestinationTranslation[1] + ", Z:" + mDestinationTranslation[2]);
 
         mDestinationTextView.setText(stringBuilder.toString());
 
-        if (isLearningMode) {
-            // Disable save ADF button until Tango relocalizes to the current ADF.
-            mSaveAdfButton.setEnabled(false);
-        } else {
-            // Hide to save ADF button if leanring mode is off.
-            mSaveAdfButton.setVisibility(View.GONE);
-        }
-
         if (isLoadAdf) {
-            ArrayList<String> fullUuidList;
-            // Returns a list of ADFs with their UUIDs
-            fullUuidList = tango.listAreaDescriptions();
-            if (fullUuidList.size() == 0) {
-                mUuidTextView.setText(R.string.no_uuid);
+            if (isLearningMode) {
+                // Disable save ADF button until Tango relocalizes to the current ADF.
+                mSaveAdfButton.setEnabled(false);
             } else {
-                mUuidTextView.setText(getString(R.string.number_of_adfs) + fullUuidList.size()
-                        + getString(R.string.latest_adf_is)
-                        + fullUuidList.get(fullUuidList.size() - 1));
+                // Hide to save ADF button if leanring mode is off.
+                mSaveAdfButton.setVisibility(View.GONE);
+            }
+
+            if (isLoadAdf) {
+                ArrayList<String> fullUuidList;
+                // Returns a list of ADFs with their UUIDs
+                fullUuidList = tango.listAreaDescriptions();
+                if (fullUuidList.size() == 0) {
+                    mUuidTextView.setText(R.string.no_uuid);
+                } else {
+                    mUuidTextView.setText(getString(R.string.number_of_adfs) + fullUuidList.size()
+                            + getString(R.string.latest_adf_is)
+                            + fullUuidList.get(fullUuidList.size() - 1));
+                }
             }
         }
     }
@@ -287,6 +296,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
                 // Make sure to have atomic access to Tango Data so that UI loop doesn't interfere
                 // while Pose call back is updating the data.
                 synchronized (mSharedLock) {
+                    currentPose = pose;
                     // Check for Device wrt ADF pose, Device wrt Start of Service pose, Start of
                     // Service wrt ADF pose (This pose determines if the device is relocalized or
                     // not).
@@ -311,6 +321,8 @@ public class HelloAreaDescriptionActivity extends Activity implements
                                 String adfFileName = fullUuidList.get(fullUuidList.size() - 1);
 
                                 String landmarksStored = readFile(adfFileName);
+
+                                Log.i("landmarksStored = ", landmarksStored);
 
                                 // String from file to json and then set values of translation
 
@@ -337,7 +349,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
                 }
 
                 // get current pose
-                currentPose = pose;
+              //  currentPose = pose;
 
 
                 final double deltaTime = (pose.timestamp - mPreviousPoseTimeStamp) *
@@ -440,20 +452,20 @@ public class HelloAreaDescriptionActivity extends Activity implements
 
         JSONObject jsonObj = new JSONObject();
 
-        for(int i=0; i<size; i++){
+       // for(int i=0; i<size; i++){
             StringBuilder xNameBuilder = new StringBuilder();
             StringBuilder yNameBuilder = new StringBuilder();
             StringBuilder zNameBuilder = new StringBuilder();
 
-            xNameBuilder.append(landmarkName.get(i) + "_x");
-            yNameBuilder.append(landmarkName.get(i) + "_y");
-            zNameBuilder.append(landmarkName.get(i) + "_z");
+            xNameBuilder.append(landmarkName.get(0) + "_x");
+            yNameBuilder.append(landmarkName.get(0) + "_y");
+            zNameBuilder.append(landmarkName.get(0) + "_z");
 
             String xName = xNameBuilder.toString();
             String yName = yNameBuilder.toString();
             String zName = zNameBuilder.toString();
 
-            float translationStored[] = landmarkList.get(i).getTranslationAsFloats();
+            float translationStored[] = landmarkList.get(0).getTranslationAsFloats();
             String xPose = Float.toString(translationStored[0]);
             String yPose = Float.toString(translationStored[1]);
             String zPose = Float.toString(translationStored[2]);
@@ -465,7 +477,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-        }
+        //}
 
         // Create a file in the Internal Storage
         String fileName = id; //name file with uuid
@@ -538,6 +550,8 @@ public class HelloAreaDescriptionActivity extends Activity implements
                 adfName, adfUuid);
         Toast.makeText(this, toastMessage, Toast.LENGTH_LONG).show();
         mSaveAdfTask = null;
+
+
         saveLandmarks(adfUuid);
         finish();
     }
