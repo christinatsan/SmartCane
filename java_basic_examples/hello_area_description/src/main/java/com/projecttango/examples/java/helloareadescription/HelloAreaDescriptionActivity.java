@@ -31,6 +31,7 @@ import com.google.atap.tangoservice.TangoXyzIjData;
 
 import android.app.Activity;
 import android.app.FragmentManager;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -51,6 +52,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
 
     private static final String TAG = HelloAreaDescriptionActivity.class.getSimpleName();
     private static final int SECS_TO_MILLISECS = 1000;
+    private static final int REQUEST_ENABLE_BT = 1;
     private Tango mTango;
     private TangoConfig mConfig;
     private TextView mUuidTextView;
@@ -387,4 +389,25 @@ public class HelloAreaDescriptionActivity extends Activity implements
         setAdfNameDialog.setArguments(bundle);
         setAdfNameDialog.show(manager, "ADFNameDialog");
     }
+
+    private void setupBluetooth() {
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter != null) {
+            // Device does support Bluetooth
+            if (!mBluetoothAdapter.isEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_ENABLE_BT);
+
+                int resultCode = 0;
+                onActivityResult(REQUEST_ENABLE_BT, resultCode, enableBtIntent);
+
+                if (resultCode == Activity.RESULT_OK) {
+                    
+
+                }
+            }
+        }
+
+    }
 }
+
