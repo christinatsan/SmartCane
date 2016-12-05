@@ -24,6 +24,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -40,6 +41,14 @@ import com.google.atap.tangoservice.TangoPointCloudData;
 import com.google.atap.tangoservice.TangoPoseData;
 import com.google.atap.tangoservice.TangoXyzIjData;
 
+import org.json.JSONException;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 
 /**
@@ -62,10 +71,15 @@ public class HelloAreaDescriptionActivity extends Activity implements
 
     private Button mSaveAdfButton;
     private Button mSaveLandButton;
+    private EditText mLandmarkName;
+
+    private float translation[];
 
     private boolean mSaveLand;
-    private ArrayList<TangoPoseData> landmarkList = new ArrayList();
-    private ArrayList<String> landmarkName = new ArrayList();
+    private ArrayList<TangoPoseData> landmarkList = new ArrayList<TangoPoseData>();
+    private ArrayList<String> landmarkName = new ArrayList<String>();
+    private ArrayList<String> adfName = new ArrayList<String>();
+    private TangoPoseData currentPose;
 
     private float[] arrayLands;
     private int countLands = 0;
@@ -78,7 +92,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
     private boolean mIsConstantSpaceRelocalize;
 
     private String mPositionString;
-    private float[] mDestinationTranslation = {(float)5, (float)0, (float)0};
+    private float[] mDestinationTranslation = {(float)2, (float)0, (float)0};
 
     // Long-running task to save the ADF.
     private SaveAdfTask mSaveAdfTask;
@@ -174,11 +188,23 @@ public class HelloAreaDescriptionActivity extends Activity implements
         mCurrentLocationTextView = (TextView) findViewById(R.id.current_location_textview);
         mReachedDestinationTextView = (TextView) findViewById(R.id.reached_destination_textview);
         mSaveLandButton = (Button) findViewById(R.id.land_button);
+        mLandmarkName = (EditText) findViewById(R.id.landmarkName);
 
         mSaveLandButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                mSaveLand = true;
+
+                landmarkList.add(currentPose);
+
+                Context context = getApplicationContext();
+                CharSequence text = "Landmark saved";
+                int duration = Toast.LENGTH_SHORT;
+
+                Toast toast = Toast.makeText(context, text, duration);
+                toast.show();
+
+                String name = mLandmarkName.getText().toString();
+                landmarkName.add(name);
             }
         });
 
@@ -266,31 +292,58 @@ public class HelloAreaDescriptionActivity extends Activity implements
                     // not).
                     if (pose.baseFrame == TangoPoseData.COORDINATE_FRAME_AREA_DESCRIPTION
                             && pose.targetFrame == TangoPoseData
-                            .COORDINATE_FRAME_START_OF_SERVICE) {
+                            .COORDINATE_FRAME_DEVICE) {
                         if (pose.statusCode == TangoPoseData.POSE_VALID) {
                             mIsRelocalized = true;
+
+                            StringBuilder stringBuilder = new StringBuilder();
+
+                            translation = pose.getTranslationAsFloats();
+                            stringBuilder.append("X:" + translation[0] + ", Y:" + translation[1] + ", Z:" + translation[2]);
+                            mPositionString = stringBuilder.toString();
+
+                            // Load saved landmarks and
+
+                            ArrayList<String> fullUuidList = null;
+                            // Returns a list of ADFs with their UUIDs
+                            if(fullUuidList !=  null) {
+                                fullUuidList = mTango.listAreaDescriptions();
+                                String adfFileName = fullUuidList.get(fullUuidList.size() - 1);
+
+                                String landmarksStored = readFile(adfFileName);
+
+                                // String from file to json and then set values of translation
+
+                                float xPose = 0.0f;
+                                float yPose = 0.0f;
+                                float zPose = 0.0f;
+
+                                try {
+                                    JSONObject JSONlandmarks = new JSONObject(landmarksStored);
+                                    xPose = Float.valueOf(JSONlandmarks.getString("testLandmark_x"));
+                                    yPose = Float.valueOf(JSONlandmarks.getString("testLandmark_y"));
+                                    zPose = Float.valueOf(JSONlandmarks.getString("testLandmark_z"));
+
+
+                                } catch (JSONException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+
                         } else {
                             mIsRelocalized = false;
                         }
                     }
                 }
 
-               // float coords[] = pose.getTranslationAsFloats();
-                //arrayLands[countLands] = coords[0];
-               // arrayLands[countLands+1] = coords[1];
-               // arrayLands[countLands+2] = coords[2];
-               // countLands++;
+                // get current pose
+                currentPose = pose;
+
 
                 final double deltaTime = (pose.timestamp - mPreviousPoseTimeStamp) *
                         SECS_TO_MILLISECS;
                 mPreviousPoseTimeStamp = pose.timestamp;
                 mTimeToNextUpdate -= deltaTime;
-
-                StringBuilder stringBuilder = new StringBuilder();
-
-                final float translation[] = pose.getTranslationAsFloats();
-                stringBuilder.append("X:" + translation[0] + ", Y:" + translation[1] + ", Z:" + translation[2]);
-                mPositionString = stringBuilder.toString();
 
 
                 if (mTimeToNextUpdate < 0.0) {
@@ -306,23 +359,14 @@ public class HelloAreaDescriptionActivity extends Activity implements
                                         getString(R.string.not_localized));
 
                                 if (mIsRelocalized) {
+
                                     mCurrentLocationTextView.setText(mPositionString);
+
 
                                     mReachedDestinationTextView.setText(String.valueOf(((int) translation[0] == (int) mDestinationTranslation[0]) &&
                                             ((int) translation[1] == (int) mDestinationTranslation[1]) &&
                                             ((int) translation[2] == (int) mDestinationTranslation[2])));
 
-                                    if(mSaveLand == true){
-                                        landmarkList.add(pose);
-                                        mSaveLand = false;
-
-                                        Context context = getApplicationContext();
-                                        CharSequence text = "Landmark saved";
-                                        int duration = Toast.LENGTH_SHORT;
-
-                                        Toast toast = Toast.makeText(context, text, duration);
-                                        toast.show();
-                                    }
                                 }
                             }
                         }
@@ -350,6 +394,93 @@ public class HelloAreaDescriptionActivity extends Activity implements
                 // We are not using onFrameAvailable for this application.
             }
         });
+    }
+
+    private String readFile(String adfId){
+
+        StringBuilder finalString = new StringBuilder();
+
+        try {
+
+            StringBuilder fileName = new StringBuilder();
+            fileName.append(adfId + ".txt");
+
+            FileInputStream inStream = this.openFileInput(adfId);
+            InputStreamReader inputStreamReader = new InputStreamReader(inStream);
+            BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+
+            String oneLine;
+
+            while ((oneLine = bufferedReader.readLine()) != null) {
+                finalString.append(oneLine);
+            }
+
+            bufferedReader.close();
+            inStream.close();
+            inputStreamReader.close();
+
+        } catch (IOException e){
+            e.printStackTrace();
+
+
+        }
+
+        String landmarkString = finalString.toString();
+
+        return landmarkString;
+    }
+
+    private void saveLandmarks(String id){
+
+        // Check if this is called
+
+        Log.d("Checking","save Landmarks to file is called");
+
+        int size = landmarkList.size();
+
+        JSONObject jsonObj = new JSONObject();
+
+        for(int i=0; i<size; i++){
+            StringBuilder xNameBuilder = new StringBuilder();
+            StringBuilder yNameBuilder = new StringBuilder();
+            StringBuilder zNameBuilder = new StringBuilder();
+
+            xNameBuilder.append(landmarkName.get(i) + "_x");
+            yNameBuilder.append(landmarkName.get(i) + "_y");
+            zNameBuilder.append(landmarkName.get(i) + "_z");
+
+            String xName = xNameBuilder.toString();
+            String yName = yNameBuilder.toString();
+            String zName = zNameBuilder.toString();
+
+            float translationStored[] = landmarkList.get(i).getTranslationAsFloats();
+            String xPose = Float.toString(translationStored[0]);
+            String yPose = Float.toString(translationStored[1]);
+            String zPose = Float.toString(translationStored[2]);
+
+            try {
+                jsonObj.put(xName,xPose);
+                jsonObj.put(yName,yPose);
+                jsonObj.put(zName,zPose);
+            } catch (JSONException e) {
+                e.printStackTrace();
+            }
+        }
+
+        // Create a file in the Internal Storage
+        String fileName = id; //name file with uuid
+        String content = jsonObj.toString();
+
+        FileOutputStream outputStream = null;
+        try {
+            outputStream = openFileOutput(fileName, Context.MODE_PRIVATE);
+            outputStream.write(content.getBytes());
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+
     }
 
     /**
@@ -407,6 +538,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
                 adfName, adfUuid);
         Toast.makeText(this, toastMessage, Toast.LENGTH_LONG).show();
         mSaveAdfTask = null;
+        saveLandmarks(adfUuid);
         finish();
     }
 
