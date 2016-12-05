@@ -19,8 +19,10 @@ package com.projecttango.examples.java.helloareadescription;
 import com.google.atap.tangoservice.Tango;
 
 import android.app.Activity;
+import android.bluetooth.BluetoothAdapter;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 import android.widget.ToggleButton;
@@ -38,6 +40,7 @@ public class StartActivity extends Activity {
 
     // Permission request action.
     public static final int REQUEST_CODE_TANGO_PERMISSION = 0;
+    public static final int REQUEST_CODE_ENABLE_BT_PERMISSION = 1;
 
     // UI elements.
     private ToggleButton mLearningModeToggleButton;
@@ -61,6 +64,8 @@ public class StartActivity extends Activity {
 
         startActivityForResult(
                 Tango.getRequestPermissionIntent(Tango.PERMISSIONTYPE_ADF_LOAD_SAVE), 0);
+
+        setupBluetooth();
     }
 
     /**
@@ -127,6 +132,25 @@ public class StartActivity extends Activity {
             if (resultCode == RESULT_CANCELED) {
                 Toast.makeText(this, R.string.arealearning_permission, Toast.LENGTH_SHORT).show();
                 finish();
+            }
+        }
+
+        if (requestCode == REQUEST_CODE_ENABLE_BT_PERMISSION) {
+            // Make sure the request was successful
+            if (resultCode == RESULT_CANCELED) {
+                Toast.makeText(this, R.string.bluetooth_permission, Toast.LENGTH_SHORT).show();
+                finish();
+            }
+        }
+    }
+
+    private void setupBluetooth() {
+        BluetoothAdapter mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        if (mBluetoothAdapter != null) {
+            // Device does support Bluetooth
+            if (!mBluetoothAdapter.isEnabled()) {
+                Intent enableBtIntent = new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE);
+                startActivityForResult(enableBtIntent, REQUEST_CODE_ENABLE_BT_PERMISSION);
             }
         }
     }
