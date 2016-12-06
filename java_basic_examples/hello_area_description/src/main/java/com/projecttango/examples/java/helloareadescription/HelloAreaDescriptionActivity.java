@@ -61,6 +61,8 @@ public class HelloAreaDescriptionActivity extends Activity implements
 
     private Button mSaveAdfButton;
 
+    private float translation[];
+
     private double mPreviousPoseTimeStamp;
     private double mTimeToNextUpdate = UPDATE_INTERVAL_MS;
 
@@ -69,7 +71,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
     private boolean mIsConstantSpaceRelocalize;
 
     private String mPositionString;
-    private float[] mDestinationTranslation = {(float)5, (float)0, (float)0};
+    private float[] mDestinationTranslation = {(float)2, (float)0, (float)0};
 
     // Long-running task to save the ADF.
     private SaveAdfTask mSaveAdfTask;
@@ -247,25 +249,26 @@ public class HelloAreaDescriptionActivity extends Activity implements
                     // not).
                     if (pose.baseFrame == TangoPoseData.COORDINATE_FRAME_AREA_DESCRIPTION
                             && pose.targetFrame == TangoPoseData
-                            .COORDINATE_FRAME_START_OF_SERVICE) {
+                            .COORDINATE_FRAME_DEVICE) {
                         if (pose.statusCode == TangoPoseData.POSE_VALID) {
                             mIsRelocalized = true;
+
+                            StringBuilder stringBuilder = new StringBuilder();
+
+                            translation = pose.getTranslationAsFloats();
+                            stringBuilder.append("X:" + translation[0] + ", Y:" + translation[1] + ", Z:" + translation[2]);
+                            mPositionString = stringBuilder.toString();
                         } else {
                             mIsRelocalized = false;
                         }
                     }
                 }
 
+
                 final double deltaTime = (pose.timestamp - mPreviousPoseTimeStamp) *
                         SECS_TO_MILLISECS;
                 mPreviousPoseTimeStamp = pose.timestamp;
                 mTimeToNextUpdate -= deltaTime;
-
-                StringBuilder stringBuilder = new StringBuilder();
-
-                final float translation[] = pose.getTranslationAsFloats();
-                stringBuilder.append("X:" + translation[0] + ", Y:" + translation[1] + ", Z:" + translation[2]);
-                mPositionString = stringBuilder.toString();
 
 
                 if (mTimeToNextUpdate < 0.0) {
@@ -281,6 +284,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
                                         getString(R.string.not_localized));
 
                                 if (mIsRelocalized) {
+
                                     mCurrentLocationTextView.setText(mPositionString);
 
                                     mReachedDestinationTextView.setText(String.valueOf(((int) translation[0] == (int) mDestinationTranslation[0]) &&
