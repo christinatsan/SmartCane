@@ -19,27 +19,18 @@ package com.projecttango.examples.java.helloareadescription;
 import com.google.atap.tangoservice.Tango;
 
 import android.app.Activity;
-import android.content.BroadcastReceiver;
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.v4.app.FragmentTransaction;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Toast;
 import android.widget.ToggleButton;
-import android.support.v4.app.FragmentActivity;
 
-
-import java.util.ArrayList;
 
 /**
  * Start Activity for Area Description example. Gives the ability to choose a particular
  * configuration and also Manage Area Description Files (ADF).
  */
-public class StartActivity extends FragmentActivity {
+public class StartActivity extends Activity {
     // The unique key string for storing user's input.
     public static final String USE_AREA_LEARNING =
             "com.projecttango.examples.java.helloareadescription.usearealearning";
@@ -73,12 +64,6 @@ public class StartActivity extends FragmentActivity {
 
         startActivityForResult(
                 Tango.getRequestPermissionIntent(Tango.PERMISSIONTYPE_ADF_LOAD_SAVE), 0);
-
-        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
-        BluetoothChatFragment fragment = new BluetoothChatFragment();
-        transaction.replace(R.id.sample_content_fragment, fragment);
-        transaction.commit();
-
     }
 
     /**

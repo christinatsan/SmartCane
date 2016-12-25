@@ -29,11 +29,13 @@ import com.google.atap.tangoservice.TangoPointCloudData;
 import com.google.atap.tangoservice.TangoPoseData;
 import com.google.atap.tangoservice.TangoXyzIjData;
 
-import android.app.Activity;
 import android.app.FragmentManager;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.v4.app.FragmentTransaction;
+import android.support.v4.app.FragmentActivity;
+
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -46,7 +48,7 @@ import java.util.ArrayList;
  * Main Activity class for the Area Description example. Handles the connection to the Tango service
  * and propagation of Tango pose data to Layout view.
  */
-public class HelloAreaDescriptionActivity extends Activity implements
+public class HelloAreaDescriptionActivity extends FragmentActivity implements
         SetAdfNameDialog.CallbackListener,
         SaveAdfTask.SaveAdfListener {
 
@@ -79,6 +81,8 @@ public class HelloAreaDescriptionActivity extends Activity implements
 
     private final Object mSharedLock = new Object();
 
+    private BluetoothChatFragment fragment;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -87,6 +91,11 @@ public class HelloAreaDescriptionActivity extends Activity implements
         Intent intent = getIntent();
         mIsLearningMode = intent.getBooleanExtra(StartActivity.USE_AREA_LEARNING, false);
         mIsConstantSpaceRelocalize = intent.getBooleanExtra(StartActivity.LOAD_ADF, false);
+
+        FragmentTransaction transaction = getSupportFragmentManager().beginTransaction();
+        fragment = new BluetoothChatFragment();
+        transaction.replace(R.id.sample_content_fragment, fragment);
+        transaction.commit();
     }
 
     @Override
@@ -269,6 +278,8 @@ public class HelloAreaDescriptionActivity extends Activity implements
                 stringBuilder.append("X:" + translation[0] + ", Y:" + translation[1] + ", Z:" + translation[2]);
                 mPositionString = stringBuilder.toString();
 
+//                sendToBluetooth("poseData", mPositionString);
+                fragment.sendMessage(mPositionString);
 
                 if (mTimeToNextUpdate < 0.0) {
                     mTimeToNextUpdate = UPDATE_INTERVAL_MS;
@@ -388,6 +399,14 @@ public class HelloAreaDescriptionActivity extends Activity implements
         SetAdfNameDialog setAdfNameDialog = new SetAdfNameDialog();
         setAdfNameDialog.setArguments(bundle);
         setAdfNameDialog.show(manager, "ADFNameDialog");
+    }
+
+    private void sendToBluetooth(String key, String value) {
+        Bundle bundle = new Bundle();
+        bundle.putString(key, value);
+        // set Fragmentclass Arguments
+        BluetoothChatFragment fragment = new BluetoothChatFragment();
+        fragment.setArguments(bundle);
     }
 }
 
