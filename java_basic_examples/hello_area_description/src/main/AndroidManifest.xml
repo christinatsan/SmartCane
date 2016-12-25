@@ -23,6 +23,7 @@
         android:minSdkVersion="17"
         android:targetSdkVersion="19" />
 
+    <uses-permission android:name="android.permission.BLUETOOTH_ADMIN" />
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
@@ -56,6 +57,18 @@
             android:label="@string/app_name_long"
             android:screenOrientation="nosensor">
         </activity>
+        <activity android:name=".BluetoothChat"
+            android:label="@string/app_name"
+            android:configChanges="orientation|keyboardHidden">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+        <activity android:name=".DeviceListActivity"
+            android:label="@string/select_device"
+            android:theme="@android:style/Theme.Dialog"
+            android:configChanges="orientation|keyboardHidden" />
     </application>
 
 </manifest>
