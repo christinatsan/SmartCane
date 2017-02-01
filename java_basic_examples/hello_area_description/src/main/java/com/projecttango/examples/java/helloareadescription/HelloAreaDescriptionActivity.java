@@ -278,9 +278,6 @@ public class HelloAreaDescriptionActivity extends FragmentActivity implements
                 stringBuilder.append("X:" + translation[0] + ", Y:" + translation[1] + ", Z:" + translation[2]);
                 mPositionString = stringBuilder.toString();
 
-//                sendToBluetooth("poseData", mPositionString);
-                fragment.sendMessage(mPositionString);
-
                 if (mTimeToNextUpdate < 0.0) {
                     mTimeToNextUpdate = UPDATE_INTERVAL_MS;
 
@@ -295,6 +292,8 @@ public class HelloAreaDescriptionActivity extends FragmentActivity implements
 
                                 if (mIsRelocalized) {
                                     mCurrentLocationTextView.setText(mPositionString);
+
+                                    fragment.sendMessage(mPositionString);
 
                                     mReachedDestinationTextView.setText(String.valueOf(((int) translation[0] == (int) mDestinationTranslation[0]) &&
                                             ((int) translation[1] == (int) mDestinationTranslation[1]) &&
@@ -399,14 +398,6 @@ public class HelloAreaDescriptionActivity extends FragmentActivity implements
         SetAdfNameDialog setAdfNameDialog = new SetAdfNameDialog();
         setAdfNameDialog.setArguments(bundle);
         setAdfNameDialog.show(manager, "ADFNameDialog");
-    }
-
-    private void sendToBluetooth(String key, String value) {
-        Bundle bundle = new Bundle();
-        bundle.putString(key, value);
-        // set Fragmentclass Arguments
-        BluetoothChatFragment fragment = new BluetoothChatFragment();
-        fragment.setArguments(bundle);
     }
 }
 
