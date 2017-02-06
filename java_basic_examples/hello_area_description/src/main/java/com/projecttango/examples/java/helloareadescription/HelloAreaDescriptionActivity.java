@@ -78,6 +78,8 @@ public class HelloAreaDescriptionActivity extends Activity implements
     private Button mSaveAdfButton;
     private Button mSaveLandButton;
     private EditText mLandmarkName;
+    private Button mChooseLandButton;
+    private EditText mDestLandmark;
 
     private float translation[];
 
@@ -108,6 +110,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
     private final Object mSharedLock = new Object();
 
     private String landmarksStored;
+    private String chosenLandmark;
     private float xPose = 0.0f;
     private float yPose = 0.0f;
     private float zPose = 0.0f;
@@ -204,6 +207,17 @@ public class HelloAreaDescriptionActivity extends Activity implements
         mStringx = (TextView) findViewById(R.id.xString);
         mStringy = (TextView) findViewById(R.id.yString);
         mStringz = (TextView) findViewById(R.id.zString);
+        mDestLandmark = (EditText) findViewById(R.id.destLandmark);
+        mChooseLandButton = (Button) findViewById(R.id.chooseLandButton);
+
+        mChooseLandButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+
+                chosenLandmark = mDestLandmark.getText().toString();
+
+            }
+        });
 
         mSaveLandButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -365,9 +379,9 @@ public class HelloAreaDescriptionActivity extends Activity implements
                                 StringBuilder yNameBuilder = new StringBuilder();
                                 StringBuilder zNameBuilder = new StringBuilder();
 
-                                xNameBuilder.append(landmarkName.get(0) + "_x");
-                                yNameBuilder.append(landmarkName.get(0) + "_y");
-                                zNameBuilder.append(landmarkName.get(0) + "_z");
+                                xNameBuilder.append(chosenLandmark + "_x");
+                                yNameBuilder.append(chosenLandmark + "_y");
+                                zNameBuilder.append(chosenLandmark + "_z");
 
                                 String xName = xNameBuilder.toString();
                                 String yName = yNameBuilder.toString();
@@ -501,20 +515,20 @@ public class HelloAreaDescriptionActivity extends Activity implements
 
         JSONObject jsonObj = new JSONObject();
 
-       // for(int i=0; i<size; i++){
+        for(int i=0; i<size; i++){
             StringBuilder xNameBuilder = new StringBuilder();
             StringBuilder yNameBuilder = new StringBuilder();
             StringBuilder zNameBuilder = new StringBuilder();
 
-            xNameBuilder.append(landmarkName.get(0) + "_x");
-            yNameBuilder.append(landmarkName.get(0) + "_y");
-            zNameBuilder.append(landmarkName.get(0) + "_z");
+            xNameBuilder.append(landmarkName.get(i) + "_x");
+            yNameBuilder.append(landmarkName.get(i) + "_y");
+            zNameBuilder.append(landmarkName.get(i) + "_z");
 
             String xName = xNameBuilder.toString();
             String yName = yNameBuilder.toString();
             String zName = zNameBuilder.toString();
 
-            float translationStored[] = landmarkList.get(0).getTranslationAsFloats();
+            float translationStored[] = landmarkList.get(i).getTranslationAsFloats();
             String xPose = Float.toString(translationStored[0]);
             String yPose = Float.toString(translationStored[1]);
             String zPose = Float.toString(translationStored[2]);
@@ -526,7 +540,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
             } catch (JSONException e) {
                 e.printStackTrace();
             }
-        //}
+        }
 
         // Create a file in the Internal Storage
         String fileName = id; //name file with uuid
