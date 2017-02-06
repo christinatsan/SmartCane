@@ -51,6 +51,8 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 
+import static java.lang.String.valueOf;
+
 /**
  * Main Activity class for the Area Description example. Handles the connection to the Tango service
  * and propagation of Tango pose data to Layout view.
@@ -68,6 +70,10 @@ public class HelloAreaDescriptionActivity extends Activity implements
     private TextView mCurrentLocationTextView;
     private TextView mDestinationTextView;
     private TextView mReachedDestinationTextView;
+    private TextView mFileContentView;
+    private TextView mStringx;
+    private TextView mStringy;
+    private TextView mStringz;
 
     private Button mSaveAdfButton;
     private Button mSaveLandButton;
@@ -100,6 +106,11 @@ public class HelloAreaDescriptionActivity extends Activity implements
     private static final double UPDATE_INTERVAL_MS = 100.0;
 
     private final Object mSharedLock = new Object();
+
+    private String landmarksStored;
+    private float xPose = 0.0f;
+    private float yPose = 0.0f;
+    private float zPose = 0.0f;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -189,17 +200,21 @@ public class HelloAreaDescriptionActivity extends Activity implements
         mReachedDestinationTextView = (TextView) findViewById(R.id.reached_destination_textview);
         mSaveLandButton = (Button) findViewById(R.id.land_button);
         mLandmarkName = (EditText) findViewById(R.id.landmarkName);
+        mFileContentView = (TextView) findViewById(R.id.fileString);
+        mStringx = (TextView) findViewById(R.id.xString);
+        mStringy = (TextView) findViewById(R.id.yString);
+        mStringz = (TextView) findViewById(R.id.zString);
 
         mSaveLandButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
 
                 landmarkList.add(currentPose);
-                Log.i("landmarkList.len =  ", String.valueOf(landmarkList.size()));
+                Log.i("landmarkList.len =  ", valueOf(landmarkList.size()));
 
-                for (TangoPoseData t : landmarkList) {
-                    Log.i("t = ", t.toString());
-                }
+               // for (TangoPoseData t : landmarkList) {
+                //    Log.i("t = ", t.toString());
+               // }
 
               //  Log.d("Size of landmarks")
 
@@ -220,7 +235,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
 
         mDestinationTextView.setText(stringBuilder.toString());
 
-        if (isLoadAdf) {
+        if(isLoadAdf) {
             if (isLearningMode) {
                 // Disable save ADF button until Tango relocalizes to the current ADF.
                 mSaveAdfButton.setEnabled(false);
@@ -228,6 +243,8 @@ public class HelloAreaDescriptionActivity extends Activity implements
                 // Hide to save ADF button if leanring mode is off.
                 mSaveAdfButton.setVisibility(View.GONE);
             }
+        }
+
 
             if (isLoadAdf) {
                 ArrayList<String> fullUuidList;
@@ -242,7 +259,7 @@ public class HelloAreaDescriptionActivity extends Activity implements
                 }
             }
         }
-    }
+
 
     /**
      * Sets up the tango configuration object. Make sure mTango object is initialized before
@@ -296,7 +313,12 @@ public class HelloAreaDescriptionActivity extends Activity implements
                 // Make sure to have atomic access to Tango Data so that UI loop doesn't interfere
                 // while Pose call back is updating the data.
                 synchronized (mSharedLock) {
+
+
+                    //Log.i ("pose is called", String.valueOf(pose));
                     currentPose = pose;
+
+                    //Log.i("pose =",valueOf(currentPose));
                     // Check for Device wrt ADF pose, Device wrt Start of Service pose, Start of
                     // Service wrt ADF pose (This pose determines if the device is relocalized or
                     // not).
@@ -306,6 +328,8 @@ public class HelloAreaDescriptionActivity extends Activity implements
                         if (pose.statusCode == TangoPoseData.POSE_VALID) {
                             mIsRelocalized = true;
 
+                            Log.i("mIsRelocalized = ", valueOf(mIsRelocalized));
+
                             StringBuilder stringBuilder = new StringBuilder();
 
                             translation = pose.getTranslationAsFloats();
@@ -314,27 +338,46 @@ public class HelloAreaDescriptionActivity extends Activity implements
 
                             // Load saved landmarks and
 
-                            ArrayList<String> fullUuidList = null;
+                            ArrayList<String> fullUuidList;
                             // Returns a list of ADFs with their UUIDs
-                            if(fullUuidList !=  null) {
-                                fullUuidList = mTango.listAreaDescriptions();
+                            fullUuidList = mTango.listAreaDescriptions();
+                            if(fullUuidList.size() > 0) {
+
                                 String adfFileName = fullUuidList.get(fullUuidList.size() - 1);
 
-                                String landmarksStored = readFile(adfFileName);
+                                landmarksStored = "empty file";
 
-                                Log.i("landmarksStored = ", landmarksStored);
+                                landmarksStored = readFile(adfFileName);
+
+                                Log.d("landmarksStored", landmarksStored);
 
                                 // String from file to json and then set values of translation
 
-                                float xPose = 0.0f;
+                                /*float xPose = 0.0f;
                                 float yPose = 0.0f;
-                                float zPose = 0.0f;
+                                float zPose = 0.0f;*/
+
+                                // Get pose from first landmark saved (for now)
+
+
+                                //String lastLandmark = landmarkName.get(landmarkName.size()-1);
+                                StringBuilder xNameBuilder = new StringBuilder();
+                                StringBuilder yNameBuilder = new StringBuilder();
+                                StringBuilder zNameBuilder = new StringBuilder();
+
+                                xNameBuilder.append(landmarkName.get(0) + "_x");
+                                yNameBuilder.append(landmarkName.get(0) + "_y");
+                                zNameBuilder.append(landmarkName.get(0) + "_z");
+
+                                String xName = xNameBuilder.toString();
+                                String yName = yNameBuilder.toString();
+                                String zName = zNameBuilder.toString();
 
                                 try {
                                     JSONObject JSONlandmarks = new JSONObject(landmarksStored);
-                                    xPose = Float.valueOf(JSONlandmarks.getString("testLandmark_x"));
-                                    yPose = Float.valueOf(JSONlandmarks.getString("testLandmark_y"));
-                                    zPose = Float.valueOf(JSONlandmarks.getString("testLandmark_z"));
+                                    xPose = Float.valueOf(JSONlandmarks.getString(xName));
+                                    yPose = Float.valueOf(JSONlandmarks.getString(yName));
+                                    zPose = Float.valueOf(JSONlandmarks.getString(zName));
 
 
                                 } catch (JSONException e) {
@@ -349,7 +392,6 @@ public class HelloAreaDescriptionActivity extends Activity implements
                 }
 
                 // get current pose
-              //  currentPose = pose;
 
 
                 final double deltaTime = (pose.timestamp - mPreviousPoseTimeStamp) *
@@ -372,10 +414,15 @@ public class HelloAreaDescriptionActivity extends Activity implements
 
                                 if (mIsRelocalized) {
 
+                                    mFileContentView.setText(landmarksStored);
+
                                     mCurrentLocationTextView.setText(mPositionString);
+                                    mStringx.setText(String.valueOf(xPose));
+                                    mStringy.setText(String.valueOf(yPose));
+                                    mStringz.setText(String.valueOf(zPose));
 
 
-                                    mReachedDestinationTextView.setText(String.valueOf(((int) translation[0] == (int) mDestinationTranslation[0]) &&
+                                    mReachedDestinationTextView.setText(valueOf(((int) translation[0] == (int) mDestinationTranslation[0]) &&
                                             ((int) translation[1] == (int) mDestinationTranslation[1]) &&
                                             ((int) translation[2] == (int) mDestinationTranslation[2])));
 
@@ -414,8 +461,10 @@ public class HelloAreaDescriptionActivity extends Activity implements
 
         try {
 
-            StringBuilder fileName = new StringBuilder();
-            fileName.append(adfId + ".txt");
+           // StringBuilder fileName = new StringBuilder();
+           // fileName.append(adfId + ".txt");
+
+           // String name = fileName.toString();
 
             FileInputStream inStream = this.openFileInput(adfId);
             InputStreamReader inputStreamReader = new InputStreamReader(inStream);
@@ -482,6 +531,8 @@ public class HelloAreaDescriptionActivity extends Activity implements
         // Create a file in the Internal Storage
         String fileName = id; //name file with uuid
         String content = jsonObj.toString();
+        Log.d("content", content);
+        Log.d("filename", fileName);
 
         FileOutputStream outputStream = null;
         try {
@@ -491,6 +542,8 @@ public class HelloAreaDescriptionActivity extends Activity implements
         } catch (Exception e) {
             e.printStackTrace();
         }
+
+        Log.d("checking ", "success stored landmarks");
 
 
     }
